@@ -67,20 +67,24 @@ export default function SubjectQuestions() {
     
     try {
       const mcq = await generateMCQ(subject.name);
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const insertPayload = mcq.map((q) => ({
+        subject_id: subjectId,
+        question_text: q.question_text,
+        options: q.options,
+        correct_answer: q.correct_answer,
+        explanation: q.explanation,
+        user_id: userId,
+      }));
       
-      const { error } = await supabase
-        .from('questions')
-        .insert([{
-          subject_id: subjectId,
-          ...mcq,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        }]);
-
+      const { error } = await supabase.from('questions').insert(insertPayload);
+      
       if (error) throw error;
       
       await fetchSubjectAndQuestions();
     } catch (err) {
-      setError('Failed to generate question. Please try again.');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Failed to generate question. ${errorMessage}`);
       console.error('Error generating question:', err);
     } finally {
       setGenerating(false);
