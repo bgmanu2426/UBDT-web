@@ -28,6 +28,8 @@ export default function SubjectQuestions() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [score, setScore] = useState<number>(0);
+  const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
 
   useEffect(() => {
     fetchSubjectAndQuestions();
@@ -96,6 +98,9 @@ export default function SubjectQuestions() {
     setShowExplanation(true);
 
     const isCorrect = answer === questions[currentIndex].correct_answer;
+    if (isCorrect) {
+      setScore((prev) => prev + 1);
+    }
     await supabase.from('user_answers').insert({
       question_id: questions[currentIndex].id,
       selected_answer: answer,
@@ -104,7 +109,9 @@ export default function SubjectQuestions() {
   };
 
   const handleNext = () => {
-    if (currentIndex < questions.length - 1) {
+    if (currentIndex === questions.length - 1) {
+      setQuizCompleted(true);
+    } else {
       setCurrentIndex(currentIndex + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
@@ -113,6 +120,25 @@ export default function SubjectQuestions() {
 
   if (loading) {
     return <div className="text-center py-8">Loading questions...</div>;
+  }
+
+  if (quizCompleted) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-lg p-6 text-center">
+          <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
+          <p className="text-xl">
+            You scored {score} out of {questions.length}.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="mt-6 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -202,19 +228,18 @@ export default function SubjectQuestions() {
               </div>
 
               {showExplanation && (
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                  <h3 className="font-semibold text-blue-900 mb-2">Explanation</h3>
-                  <p className="text-blue-800">{questions[currentIndex].explanation}</p>
-                </div>
-              )}
-
-              {showExplanation && currentIndex < questions.length - 1 && (
-                <button
-                  onClick={handleNext}
-                  className="mt-6 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  Next Question
-                </button>
+                <>
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 className="font-semibold text-blue-900 mb-2">Explanation</h3>
+                    <p className="text-blue-800">{questions[currentIndex].explanation}</p>
+                  </div>
+                  <button
+                    onClick={handleNext}
+                    className="mt-6 w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+                  >
+                    {currentIndex === questions.length - 1 ? 'Finish Quiz' : 'Next Question'}
+                  </button>
+                </>
               )}
             </div>
           </div>
