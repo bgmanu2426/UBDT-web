@@ -30,6 +30,7 @@ export default function SubjectQuestions() {
   const [error, setError] = useState<string | null>(null);
   const [score, setScore] = useState<number>(0);
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
+  const [questionCount, setQuestionCount] = useState<number>(10);
 
   useEffect(() => {
     fetchSubjectAndQuestions();
@@ -68,7 +69,8 @@ export default function SubjectQuestions() {
     setError(null);
     
     try {
-      const mcq = await generateMCQ(subject.name);
+      // Pass the selected number of questions into generateMCQ
+      const mcq = await generateMCQ(subject.name, questionCount);
       const userId = (await supabase.auth.getUser()).data.user?.id;
       const insertPayload = mcq.map((q) => ({
         subject_id: subjectId,
@@ -152,18 +154,31 @@ export default function SubjectQuestions() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard
           </button>
-          <button
-            onClick={handleGenerateQuestion}
-            disabled={generating}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4 mr-2" />
-            )}
-            Generate Question
-          </button>
+          <div className="flex items-center space-x-4">
+            {/* ADD the dropdown for selecting question count */}
+            <select
+              value={questionCount}
+              onChange={(e) => setQuestionCount(Number(e.target.value))}
+              className="px-2 py-1 border rounded-md"
+            >
+              <option value={5}>5 Questions</option>
+              <option value={10}>10 Questions</option>
+              <option value={15}>15 Questions</option>
+              <option value={20}>20 Questions</option>
+            </select>
+            <button
+              onClick={handleGenerateQuestion}
+              disabled={generating}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            >
+              {generating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
+              )}
+              Generate Questions
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -175,7 +190,7 @@ export default function SubjectQuestions() {
         {questions.length === 0 ? (
           <div className="text-center py-8">
             <p>No questions available for this subject.</p>
-            <button
+            {/* <button
               onClick={handleGenerateQuestion}
               disabled={generating}
               className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
@@ -186,7 +201,7 @@ export default function SubjectQuestions() {
                 <Plus className="h-4 w-4 mr-2" />
               )}
               Generate First Question
-            </button>
+            </button> */}
           </div>
         ) : (
           <div className="bg-white shadow-lg rounded-lg overflow-hidden">

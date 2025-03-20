@@ -11,7 +11,7 @@ interface MCQQuestion {
   explanation: string;
 }
 
-export async function generateMCQ(topic: string): Promise<MCQQuestion[]> {
+export async function generateMCQ(topic: string, questionCount: number): Promise<MCQQuestion[]> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
   const prompt = `Generate multiple choice questions about ${topic}. 
@@ -25,7 +25,7 @@ export async function generateMCQ(topic: string): Promise<MCQQuestion[]> {
     },
     ...
   ]
-  . include at least 10 to 15 questions.
+  . Please generate exactly ${questionCount} questions.
     `;
 
   const result = await model.generateContent(prompt);
@@ -42,7 +42,6 @@ export async function generateMCQ(topic: string): Promise<MCQQuestion[]> {
     }
     // Clean the text by trimming and extracting the JSON array if needed
     const trimmedText = text.trim();
-    // Check if the response starts with '['.
     let jsonText = trimmedText;
     if (!trimmedText.startsWith('[')) {
       const startIdx = trimmedText.indexOf('[');
